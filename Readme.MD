@@ -3,6 +3,14 @@ Home Assistant Kotlin WebSocket [Alpha]
 
 Unofficial library for writing kotlin client for home assistant.
 
+Alternatives:
+- [AppDaemon](https://github.com/hassio-addons/addon-appdaemon) - Python Library
+- [NetDaemon](https://netdaemon.xyz/) - C# Library
+- [Khome](https://github.com/dennisschroeder/khome) - Kotlin Library
+
+Idea of the library is to provide thin extensible **core** layer just handling the WebSocket communication & (de)serialization,
+then provide types-specif extensions.
+
 Under the hood:
 - [ktor](https://github.com/ktorio/ktor)
 - [jackson](https://github.com/FasterXML/jackson-databind)
