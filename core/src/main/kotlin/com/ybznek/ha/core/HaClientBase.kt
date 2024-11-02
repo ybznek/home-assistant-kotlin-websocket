@@ -1,5 +1,6 @@
 package com.ybznek.ha.core
 
+import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.databind.JsonNode
 import com.ybznek.ha.core.data.AuthInvalidMessage
 import com.ybznek.ha.core.data.ServerTypes
@@ -12,6 +13,13 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
 
 private typealias MessageToSend = Map<String, Any?>
+
+data class HassUser(
+    val id: String,
+    val isAdmin: Boolean,
+    val isOwner: Boolean,
+    val name: String
+)
 
 abstract class HaClientBase(
     host: String,
@@ -27,7 +35,8 @@ abstract class HaClientBase(
     val MessageToSend.id get() = this["id"] as Int
     val MessageToSend.type get() = this["type"] as String
 
-    protected val conn = HaConnection(host, port, path) { type, tree ->
+    @PublishedApi
+    internal val conn = HaConnection(host, port, path) { type, tree ->
         try {
             processMessage(type, tree)
         } catch (e: Exception) {
@@ -38,7 +47,10 @@ abstract class HaClientBase(
     suspend fun start() = conn.start()
 
     suspend fun subscribeEvent(eventType: String): Int {
-        return buildMessage("subscribe_events", "event_type" to eventType).also { conn.send(it) }.id
+        return buildMessage(
+            MessageType.DefaultMessageType.SUBSCRIBE_EVENTS,
+            "event_type" to eventType
+        ).also { conn.send(it) }.id
     }
 
     suspend fun callService(
@@ -47,7 +59,7 @@ abstract class HaClientBase(
         serviceData: Map<String, Any?> = emptyMap()
     ): Msg<ResultMessageCallService> {
         val msg = buildMessage(
-            type = "call_service",
+            type = MessageType.DefaultMessageType.CALL_SERVICE,
             "domain" to domain,
             "service" to service
         ) + serviceData
@@ -56,27 +68,36 @@ abstract class HaClientBase(
     }
 
     suspend fun getStates() =
-        sendSuspendAndParse<ResultMessageGetStates>(buildMessage("get_states"))
+        sendSuspendAndParse<ResultMessageGetStates>(buildMessage(MessageType.DefaultMessageType.GET_STATES))
 
     suspend fun getServices() =
-        sendSuspendAndParse<ResultMessageGetServices>(buildMessage("get_services"))
+        sendSuspendAndParse<ResultMessageGetServices>(buildMessage(MessageType.DefaultMessageType.GET_SERVICES))
+
+    suspend fun getConfig() =
+        sendSuspendAndParse<ResultMessageGetConfig>(buildMessage(MessageType.DefaultMessageType.GET_CONFIG))
 
     fun buildMessage(
-        type: String,
+        type: MessageType,
         vararg values: Pair<String, Any?>
     ): MessageToSend =
         buildMap(2 + values.size) {
             put("id", getId())
-            put("type", type)
+            put("type", type.value)
             putAll(values)
         }
 
-    private suspend fun sendSuspend(msg: MessageToSend) =
+    @PublishedApi
+    internal suspend fun sendSuspend(msg: MessageToSend) =
         responses.waitForResponse(msg.id) { conn.send(msg) }
 
-    private suspend inline fun <reified T : Any> sendSuspendAndParse(msg: MessageToSend): Msg<T> {
+    suspend inline fun <reified T : Any> sendSuspendAndParse(msg: MessageToSend): Msg<T> {
         val tree = sendSuspend(msg)
-        val parseTree = conn.parseTree<T>(tree)
+        val parseTree = try {
+            conn.parseTree<T>(tree)
+        } catch (e: JacksonException) {
+            println(tree)
+            throw IllegalArgumentException("Unable to parse response message", e)
+        }
         return Msg(raw = tree, parsed = parseTree)
     }
 

@@ -5,3 +5,7 @@ package com.ybznek.ha.core
  * Used for extension methods
  */
 interface TypedEntity
+
+@Suppress("unused")
+@JvmInline
+value class EntityId<T : TypedEntity>(val entityId: EntityIdString)

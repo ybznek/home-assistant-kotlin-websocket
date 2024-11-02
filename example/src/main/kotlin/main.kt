@@ -1,8 +1,9 @@
+import com.ybznek.ha.core.EntityId
 import com.ybznek.ha.core.HaClient
+import com.ybznek.ha.core.HassServiceTarget
 import com.ybznek.ha.entitytypes.light.Light
 import com.ybznek.ha.entitytypes.light.isOn
 import com.ybznek.ha.entitytypes.light.turnOn
-import com.ybznek.ha.typed.EntityId
 import com.ybznek.ha.typed.get
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -39,12 +40,14 @@ fun main() {
         launch { cli.start() }
         delay(2000)
 
+        println(cli.getConfig())
+
         val lightRoom = cli.states[entity] ?: error("not found")
         val curentState = lightRoom.state
 
         // read light specific attribute
         if (!curentState.isOn) {
-            entity.turnOn(cli)
+            entity.turnOn(cli, HassServiceTarget.entity(entity))
         }
     }
 }
