@@ -17,7 +17,7 @@ data class HassEntity(
     val state: String,
     val lastChanged: Instant,
     val lastUpdated: Instant,
-    val attributes: Map<String,Any>,
+    val attributes: Map<String, Any>,
     val context: Context,
 )
 
