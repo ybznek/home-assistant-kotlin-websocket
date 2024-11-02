@@ -2,6 +2,7 @@ package com.ybznek.ha.core
 
 import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.databind.JsonNode
+import com.ybznek.ha.core.MessageType.DefaultMessageType
 import com.ybznek.ha.core.data.AuthInvalidMessage
 import com.ybznek.ha.core.data.ServerTypes
 import com.ybznek.ha.core.dispatcher.ResponseDispatcher
@@ -48,7 +49,7 @@ abstract class HaClientBase(
 
     suspend fun subscribeEvent(eventType: String): Int {
         return buildMessage(
-            MessageType.DefaultMessageType.SUBSCRIBE_EVENTS,
+            DefaultMessageType.SUBSCRIBE_EVENTS,
             "event_type" to eventType
         ).also { conn.send(it) }.id
     }
@@ -59,7 +60,7 @@ abstract class HaClientBase(
         serviceData: Map<String, Any?> = emptyMap()
     ): Msg<ResultMessageCallService> {
         val msg = buildMessage(
-            type = MessageType.DefaultMessageType.CALL_SERVICE,
+            type = DefaultMessageType.CALL_SERVICE,
             "domain" to domain,
             "service" to service
         ) + serviceData
@@ -67,14 +68,20 @@ abstract class HaClientBase(
         return sendSuspendAndParse<ResultMessageCallService>(msg)
     }
 
-    suspend fun getStates() =
-        sendSuspendAndParse<ResultMessageGetStates>(buildMessage(MessageType.DefaultMessageType.GET_STATES))
+    suspend fun getStates(): Msg<ResultMessageGetStates> =
+        standardMessage(DefaultMessageType.GET_STATES)
 
-    suspend fun getServices() =
-        sendSuspendAndParse<ResultMessageGetServices>(buildMessage(MessageType.DefaultMessageType.GET_SERVICES))
+    suspend fun getServices(): Msg<ResultMessageGetServices> =
+        standardMessage(DefaultMessageType.GET_SERVICES)
 
-    suspend fun getConfig() =
-        sendSuspendAndParse<ResultMessageGetConfig>(buildMessage(MessageType.DefaultMessageType.GET_CONFIG))
+    suspend fun getUser(): Msg<ResultMessageGetUser> =
+        standardMessage(DefaultMessageType.AUTH_CURRENT_USER)
+
+    suspend fun getConfig(): Msg<ResultMessageGetConfig> =
+        standardMessage(DefaultMessageType.GET_CONFIG)
+
+    private suspend inline fun <reified T : Any> standardMessage(type: DefaultMessageType) =
+        sendSuspendAndParse<T>(buildMessage(type))
 
     fun buildMessage(
         type: MessageType,
