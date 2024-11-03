@@ -6,7 +6,10 @@ import com.ybznek.ha.core.data.State
 import com.ybznek.ha.core.dispatcher.Dispatcher
 import com.ybznek.ha.core.dispatcher.StateChanged
 import com.ybznek.ha.core.dispatcher.TriggerableDispatcher
-import com.ybznek.ha.core.result.*
+import com.ybznek.ha.core.result.Msg
+import com.ybznek.ha.core.result.RawMsg
+import com.ybznek.ha.core.result.ResultMessageGetStates
+import com.ybznek.ha.core.result.SubscriptionMessage
 import com.ybznek.ha.core.state.StateHolder
 import com.ybznek.ha.core.state.StateProvider
 import com.ybznek.ha.core.util.KeyOptimizer
@@ -37,15 +40,16 @@ class HaClient(
         val data = event.data
         val newState = toEntityState(data.newState)
         val timeFired = event.timeFired.toKotlinInstant()
+        val entityId = optimizeKey(data.entityId)
 
         putData(
-            entityId = data.entityId,
+            entityId = entityId,
             timeFired = timeFired,
             state = newState
         )
 
         if (triggerableDispatcher.anyListener) {
-            triggerChange(data.entityId, RawMsg(tree, message), timeFired, toEntityState(data.oldState), newState)
+            triggerChange(entityId, RawMsg(tree, message), timeFired, toEntityState(data.oldState), newState)
         }
     }
 
@@ -81,11 +85,9 @@ class HaClient(
         timeFired: Instant,
         state: EntityState<TypedEntity>
     ) {
-        val holder = map[entityId]
-            ?: map.computeIfAbsent(entityId) { _ -> StateHolder(timeFired, AtomicReference(state)) }
-
-        if (holder.time <= timeFired) {
-            holder.stateRef.set(state)
+        when (val holder = map[entityId]) {
+            null -> map.computeIfAbsent(entityId) { _ -> StateHolder(timeFired, AtomicReference(state)) }
+            else -> if (holder.time <= timeFired) holder.stateRef.set(state)
         }
     }
 
@@ -93,9 +95,10 @@ class HaClient(
         val now = clock.now()
 
         for (res in message.parsed.result ?: return) {
+            val entityId = optimizeKey(res.entityId)
             val state = EntityState<TypedEntity>(
                 state = res.state,
-                attributes = res.attributes,
+                attributes = optimizeAttributes(res.attributes),
                 lastChanged = res.lastChanged.toKotlinInstant(),
                 lastReported = now,
                 lastUpdated = res.lastUpdated.toKotlinInstant(),
@@ -103,13 +106,13 @@ class HaClient(
             )
 
             putData(
-                entityId = res.entityId,
+                entityId = entityId,
                 timeFired = now,
                 state = state
             )
 
             if (changeListener.anyListener) {
-                triggerChange(res.entityId, message, now, oldState = null, newState = state)
+                triggerChange(entityId, message, now, oldState = null, newState = state)
             }
         }
     }
