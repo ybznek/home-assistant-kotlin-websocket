@@ -6,9 +6,7 @@ import com.ybznek.ha.core.data.State
 import com.ybznek.ha.core.dispatcher.Dispatcher
 import com.ybznek.ha.core.dispatcher.StateChanged
 import com.ybznek.ha.core.dispatcher.TriggerableDispatcher
-import com.ybznek.ha.core.result.Msg
-import com.ybznek.ha.core.result.ResultMessageGetStates
-import com.ybznek.ha.core.result.SubscriptionMessage
+import com.ybznek.ha.core.result.*
 import com.ybznek.ha.core.state.StateHolder
 import com.ybznek.ha.core.state.StateProvider
 import com.ybznek.ha.core.util.KeyOptimizer
@@ -17,7 +15,6 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
-
 
 class HaClient(
     host: String,
@@ -48,7 +45,7 @@ class HaClient(
         )
 
         if (triggerableDispatcher.anyListener) {
-            triggerChange(data.entityId, Msg(tree, message), timeFired, toEntityState(data.oldState), newState)
+            triggerChange(data.entityId, RawMsg(tree, message), timeFired, toEntityState(data.oldState), newState)
         }
     }
 

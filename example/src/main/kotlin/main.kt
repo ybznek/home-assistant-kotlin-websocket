@@ -2,11 +2,9 @@ import com.ybznek.ha.core.EntityId
 import com.ybznek.ha.core.HaClient
 import com.ybznek.ha.core.HassServiceTarget
 import com.ybznek.ha.entitytypes.light.Light
-import com.ybznek.ha.entitytypes.light.isOn
 import com.ybznek.ha.entitytypes.light.turnOn
 import com.ybznek.ha.typed.get
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
@@ -23,7 +21,7 @@ fun main() {
     // watch & print changed attributes
     cli.changeListener += { haClient, stateChanged ->
 
-        /*if (stateChanged.entity.startsWith("sensor.") && stateChanged.oldState != null) {
+        if (stateChanged.entity.startsWith("sensor.") && stateChanged.oldState != null) {
             val changedAttributes = stateChanged.changedAttributes
             if (changedAttributes.isNotEmpty()) {
                 println(stateChanged.entity)
@@ -32,7 +30,7 @@ fun main() {
                 }
                 println()
             }
-        }*/
+        }
     }
 
     runBlocking {
@@ -40,7 +38,12 @@ fun main() {
 
         cli.start()
         delay(2000)
+        println(cli.getConfig().parsed.result)
         println(cli.getUser().parsed.result)
+        val services = cli.getServices()
+        val message = services.parsed.result
+        println(message)
+        println(services)
         println(cli.version)
 
         while (true) {

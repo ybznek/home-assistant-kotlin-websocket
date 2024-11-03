@@ -1,6 +1,5 @@
 package com.ybznek.ha.core
 
-import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
@@ -9,7 +8,10 @@ import com.ybznek.ha.core.data.AuthInvalidMessage
 import com.ybznek.ha.core.data.ServerTypes
 import com.ybznek.ha.core.dispatcher.ResponseDispatcher
 import com.ybznek.ha.core.result.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
 
 private typealias MessageToSend = Map<String, Any?>
@@ -20,6 +22,7 @@ data class HassUser(
     val isOwner: Boolean,
     val name: String
 )
+
 
 abstract class HaClientBase(
     host: String,
@@ -47,10 +50,10 @@ abstract class HaClientBase(
 
     suspend fun start() {
         coroutineScope.launch {
-            while (!conn.closed){
+            while (!conn.closed) {
                 try {
                     conn.start()
-                }catch (e: Exception) {
+                } catch (e: Exception) {
                     e.printStackTrace()
                     println()
                 }
@@ -124,13 +127,7 @@ abstract class HaClientBase(
         type: TypeReference<T>
     ): Msg<T> {
         val tree = sendSuspend(msg)
-        val parseTree = try {
-            conn.parseTree(tree, type = type)
-        } catch (e: JacksonException) {
-            println(tree)
-            throw IllegalArgumentException("Unable to parse response message", e)
-        }
-        return Msg(raw = tree, parsed = parseTree)
+        return LazyMsg(raw = tree, LazyProvider(type, conn.mapper))
     }
 
     private suspend fun processMessage(type: String, tree: JsonNode) {

@@ -10,9 +10,9 @@ data class HassResponse(
 data class HassService(
     val name: String?,
     val description: String?,
-    val target: HassServiceTarget,
-    val fields: Map<String, HassField>,
-    val response: HassResponse
+    val target: HassServiceTarget?,
+    val fields: Map<String, HassField>?,
+    val response: HassResponse?
 )
 
 data class HassFilter(
@@ -25,10 +25,10 @@ data class HassField(
     val default: Any?,
     val required: Boolean?,
     val advanced: Boolean?,
-    val selector: Any,
+    val selector: Any?,
     val filter: HassFilter?,
     val name: String?,
-    val description: String,
+    val description: String?,
 )
 
 enum class HassState { NOT_RUNNING, STARTING, RUNNING, STOPPING, FINAL_WRITE }
