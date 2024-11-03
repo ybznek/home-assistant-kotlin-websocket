@@ -5,7 +5,7 @@ interface MessageType {
 
     enum class DefaultMessageType(override val value: String) : MessageType {
         AUTH("auth"),
-        SUPPORTED_FEATURE("supported_feature"),
+        SUPPORTED_FEATURES("supported_features"),
         GET_STATES("get_states"),
         GET_CONFIG("get_config"),
         GET_SERVICES("get_services"),

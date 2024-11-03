@@ -30,7 +30,8 @@ abstract class HaClientBase(
 ) : AutoCloseable {
     private val getId: () -> Int = AtomicInteger(0)::incrementAndGet
     private val responses = ResponseDispatcher<Int, JsonNode>()
-
+    private var _version: String? = null
+    val version: String? get() = _version
     protected val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     val MessageToSend.id get() = this["id"] as Int
@@ -71,6 +72,9 @@ abstract class HaClientBase(
     suspend fun getStates(): Msg<ResultMessageGetStates> =
         standardMessage(DefaultMessageType.GET_STATES)
 
+    suspend fun supportedFeatures(): Msg<Map<*, *>> =
+        standardMessage(DefaultMessageType.SUPPORTED_FEATURES, "features" to mapOf("coalesce_messages" to 1))
+
     suspend fun getServices(): Msg<ResultMessageGetServices> =
         standardMessage(DefaultMessageType.GET_SERVICES)
 
@@ -80,8 +84,11 @@ abstract class HaClientBase(
     suspend fun getConfig(): Msg<ResultMessageGetConfig> =
         standardMessage(DefaultMessageType.GET_CONFIG)
 
-    private suspend inline fun <reified T : Any> standardMessage(type: DefaultMessageType) =
-        sendSuspendAndParse<T>(buildMessage(type))
+    private suspend inline fun <reified T : Any> standardMessage(
+        type: DefaultMessageType,
+        vararg values: Pair<String, Any?>
+    ) =
+        sendSuspendAndParse<T>(buildMessage(type, *values))
 
     fun buildMessage(
         type: MessageType,
@@ -140,7 +147,14 @@ abstract class HaClientBase(
 
     protected open suspend fun onAuthOk(tree: JsonNode) {
         subscribeEvent("state_changed")
+        class AuthOk(val type: String, val haVersion: String)
+
+        val parsed = conn.parseTree<AuthOk>(tree)
+        _version = parsed.haVersion
+
         coroutineScope.launch {
+            //  val res=supportedFeatures()
+            //  println(res)
             onInitialState(getStates())
         }
     }

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.kotlin.treeToValue
@@ -45,10 +47,28 @@ class HaConnection(
                 val receive = incoming.receive()
                 val data = receive.data
                 val tree = mapper.readTree(data)
-                val type = tree["type"].textValue().toString()
-                processMessage(type, tree)
+                processTree(tree)
             }
         }
+
+    private suspend fun processTree(tree: JsonNode) {
+        when (tree) {
+            is ArrayNode -> {
+                for (item in tree) {
+                    processTree(item)
+                }
+            }
+
+            is ObjectNode -> {
+                val jsonNode = tree["type"]
+                    ?: error(tree.toPrettyString())
+                val type = jsonNode.textValue().toString()
+                processMessage(type, tree)
+            }
+
+            else -> error("unexpected type: $tree")
+        }
+    }
 
     @PublishedApi
     internal suspend fun send(message: String) = web.send(message)
