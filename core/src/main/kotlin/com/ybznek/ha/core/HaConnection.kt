@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import io.ktor.client.*
@@ -28,7 +27,8 @@ class HaConnection(
 ) : AutoCloseable {
 
     private lateinit var web: DefaultClientWebSocketSession
-    private val closed = AtomicBoolean(false)
+    private val _closed = AtomicBoolean(false)
+    val closed get() = _closed.get()
     private val client = HttpClient {
         install(WebSockets) {
             pingIntervalMillis = 20_000
@@ -45,7 +45,7 @@ class HaConnection(
     suspend fun start() =
         client.webSocket(method = HttpMethod.Get, host = host, port = port, path = path) {
             web = this
-            while (!closed.get()) {
+            while (!closed) {
                 val receive = incoming.receive()
                 val data = receive.data
                 val tree = mapper.readTree(data)
@@ -73,7 +73,10 @@ class HaConnection(
     }
 
     @PublishedApi
-    internal suspend fun send(message: String) = web.send(message)
+    internal suspend fun send(message: String) {
+        web.send(message)
+        // TODO handle exception // block if cannot be sent
+    }
 
     suspend fun send(message: Any) = send(mapper.writeValueAsString(message))
 
@@ -85,6 +88,6 @@ class HaConnection(
 
     override fun close() {
         client.close()
-        closed.set(true)
+        _closed.set(true)
     }
 }

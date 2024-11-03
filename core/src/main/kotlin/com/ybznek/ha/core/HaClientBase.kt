@@ -9,10 +9,7 @@ import com.ybznek.ha.core.data.AuthInvalidMessage
 import com.ybznek.ha.core.data.ServerTypes
 import com.ybznek.ha.core.dispatcher.ResponseDispatcher
 import com.ybznek.ha.core.result.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.concurrent.atomic.AtomicInteger
 
 private typealias MessageToSend = Map<String, Any?>
@@ -48,7 +45,18 @@ abstract class HaClientBase(
         }
     }
 
-    suspend fun start() = conn.start()
+    suspend fun start() {
+        coroutineScope.launch {
+            while (!conn.closed){
+                try {
+                    conn.start()
+                }catch (e: Exception) {
+                    e.printStackTrace()
+                    println()
+                }
+            }
+        }
+    }
 
     suspend fun subscribeEvent(eventType: String): Int {
         return buildMessage(

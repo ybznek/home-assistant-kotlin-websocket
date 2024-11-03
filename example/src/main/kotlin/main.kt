@@ -38,7 +38,7 @@ fun main() {
     runBlocking {
         val entity = EntityId<Light>("light.workroom_1")
 
-        launch { cli.start() }
+        cli.start()
         delay(2000)
         println(cli.getUser().parsed.result)
         println(cli.version)
