@@ -1,7 +1,9 @@
 package com.ybznek.ha.core
 
 import com.fasterxml.jackson.core.JacksonException
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.ybznek.ha.core.MessageType.DefaultMessageType
 import com.ybznek.ha.core.data.AuthInvalidMessage
 import com.ybznek.ha.core.data.ServerTypes
@@ -66,29 +68,33 @@ abstract class HaClientBase(
             "service" to service
         ) + serviceData
 
-        return sendSuspendAndParse<ResultMessageCallService>(msg)
+        return sendSuspendAndParse(msg, jacksonTypeRef<ResultMessageCallService>())
     }
 
     suspend fun getStates(): Msg<ResultMessageGetStates> =
-        standardMessage(DefaultMessageType.GET_STATES)
+        standardMessage(DefaultMessageType.GET_STATES, typeReference = jacksonTypeRef())
 
-    suspend fun supportedFeatures(): Msg<Map<*, *>> =
-        standardMessage(DefaultMessageType.SUPPORTED_FEATURES, "features" to mapOf("coalesce_messages" to 1))
+    private suspend fun supportedFeatures(): Msg<Map<*, *>> =
+        standardMessage(
+            DefaultMessageType.SUPPORTED_FEATURES,
+            jacksonTypeRef(),
+            "features" to mapOf("coalesce_messages" to 1)
+        )
 
     suspend fun getServices(): Msg<ResultMessageGetServices> =
-        standardMessage(DefaultMessageType.GET_SERVICES)
+        standardMessage(DefaultMessageType.GET_SERVICES, jacksonTypeRef())
 
     suspend fun getUser(): Msg<ResultMessageGetUser> =
-        standardMessage(DefaultMessageType.AUTH_CURRENT_USER)
+        standardMessage(DefaultMessageType.AUTH_CURRENT_USER, jacksonTypeRef())
 
     suspend fun getConfig(): Msg<ResultMessageGetConfig> =
-        standardMessage(DefaultMessageType.GET_CONFIG)
+        standardMessage(DefaultMessageType.GET_CONFIG, typeReference = jacksonTypeRef())
 
-    private suspend inline fun <reified T : Any> standardMessage(
+    private suspend fun <T : Any> standardMessage(
         type: DefaultMessageType,
-        vararg values: Pair<String, Any?>
-    ) =
-        sendSuspendAndParse<T>(buildMessage(type, *values))
+        typeReference: TypeReference<T>,
+        vararg values: Pair<String, Any?>,
+    ) = sendSuspendAndParse(buildMessage(type, *values), typeReference)
 
     fun buildMessage(
         type: MessageType,
@@ -104,10 +110,14 @@ abstract class HaClientBase(
     internal suspend fun sendSuspend(msg: MessageToSend) =
         responses.waitForResponse(msg.id) { conn.send(msg) }
 
-    suspend inline fun <reified T : Any> sendSuspendAndParse(msg: MessageToSend): Msg<T> {
+
+    suspend fun <T : Any> HaClientBase.sendSuspendAndParse(
+        msg: MessageToSend,
+        type: TypeReference<T>
+    ): Msg<T> {
         val tree = sendSuspend(msg)
         val parseTree = try {
-            conn.parseTree<T>(tree)
+            conn.parseTree(tree, type = type)
         } catch (e: JacksonException) {
             println(tree)
             throw IllegalArgumentException("Unable to parse response message", e)
@@ -155,8 +165,6 @@ abstract class HaClientBase(
         coroutineScope.launch {
             supportedFeatures()
             subscribeEvent("state_changed")
-            //  val res=supportedFeatures()
-            //  println(res)
             onInitialState(getStates())
         }
     }

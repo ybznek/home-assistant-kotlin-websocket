@@ -1,5 +1,6 @@
 package com.ybznek.ha.core
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import io.ktor.client.*
@@ -77,6 +79,9 @@ class HaConnection(
 
     inline fun <reified T : Any> parseTree(tree: JsonNode): T =
         mapper.treeToValue<T>(tree)
+
+    fun <T : Any> parseTree(tree: JsonNode, type: TypeReference<T>): T =
+        mapper.treeToValue(tree, mapper.constructType(type))
 
     override fun close() {
         client.close()

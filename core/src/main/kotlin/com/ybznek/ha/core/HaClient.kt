@@ -98,7 +98,7 @@ class HaClient(
         for (res in message.parsed.result ?: return) {
             val state = EntityState<TypedEntity>(
                 state = res.state,
-                attributes = emptyMap(),
+                attributes = res.attributes,
                 lastChanged = res.lastChanged.toKotlinInstant(),
                 lastReported = now,
                 lastUpdated = res.lastUpdated.toKotlinInstant(),

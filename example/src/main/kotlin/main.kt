@@ -22,7 +22,8 @@ fun main() {
 
     // watch & print changed attributes
     cli.changeListener += { haClient, stateChanged ->
-        if (stateChanged.entity.startsWith("sensor.") && stateChanged.oldState != null) {
+
+        /*if (stateChanged.entity.startsWith("sensor.") && stateChanged.oldState != null) {
             val changedAttributes = stateChanged.changedAttributes
             if (changedAttributes.isNotEmpty()) {
                 println(stateChanged.entity)
@@ -31,7 +32,7 @@ fun main() {
                 }
                 println()
             }
-        }
+        }*/
     }
 
     runBlocking {
@@ -39,17 +40,18 @@ fun main() {
 
         launch { cli.start() }
         delay(2000)
-
+        println(cli.getUser().parsed.result)
         println(cli.version)
 
-
-        val lightRoom = cli.states[entity] ?: error("not found")
-        val curentState = lightRoom.state
+        while (true) {
+            val lightRoom = cli.states[entity] ?: error("not found")
+            val curentState = lightRoom.state
+            println(curentState.attributes)
+            delay(1000)
+        }
 
         // read light specific attribute
-        if (!curentState.isOn) {
             entity.turnOn(cli, HassServiceTarget.entity(entity))
-        }
     }
 }
 

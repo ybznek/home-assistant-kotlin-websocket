@@ -7,7 +7,6 @@ import com.ybznek.ha.core.data.EntityState
 
 val EntityState<Light>.isOn get() = (state == "ON")
 
-
 suspend fun EntityId<Light>.turnOn(haClient: HaClient, target: HassServiceTarget) =
     haClient.callService(
         domain = "light",
