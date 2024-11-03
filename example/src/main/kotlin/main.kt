@@ -40,8 +40,8 @@ fun main() {
         launch { cli.start() }
         delay(2000)
 
-        val message = cli.supportedFeatures()
-        println(message)
+        println(cli.version)
+
 
         val lightRoom = cli.states[entity] ?: error("not found")
         val curentState = lightRoom.state

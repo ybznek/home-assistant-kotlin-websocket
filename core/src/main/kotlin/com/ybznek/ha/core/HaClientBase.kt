@@ -146,13 +146,15 @@ abstract class HaClientBase(
     }
 
     protected open suspend fun onAuthOk(tree: JsonNode) {
-        subscribeEvent("state_changed")
-        class AuthOk(val type: String, val haVersion: String)
+
+        data class AuthOk(val type: String, val haVersion: String)
 
         val parsed = conn.parseTree<AuthOk>(tree)
         _version = parsed.haVersion
 
         coroutineScope.launch {
+            supportedFeatures()
+            subscribeEvent("state_changed")
             //  val res=supportedFeatures()
             //  println(res)
             onInitialState(getStates())
