@@ -7,11 +7,20 @@ import com.ybznek.ha.core.data.EntityState
 
 val EntityState<Light>.isOn get() = (state == "ON")
 
-suspend fun EntityId<Light>.turnOn(haClient: HaClient, target: HassServiceTarget) =
+suspend fun EntityId<Light>.turnOn(haClient: HaClient) =
     haClient.callService(
         domain = "light",
         service = "turn_on",
         serviceData = mapOf(
-            "target" to target
+            "target" to HassServiceTarget.entity(this)
+        )
+    )
+
+suspend fun EntityId<Light>.turnOff(haClient: HaClient) =
+    haClient.callService(
+        domain = "light",
+        service = "turn_off",
+        serviceData = mapOf(
+            "target" to HassServiceTarget.entity(this)
         )
     )

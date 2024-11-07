@@ -41,22 +41,22 @@ abstract class HaClientBase(
 
     @PublishedApi
     internal val conn = HaConnection(host, port, path) { type, tree ->
-        try {
-            processMessage(type, tree)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        coroutineScope.launch {
+            try {
+                processMessage(type, tree)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
     suspend fun start() {
-        coroutineScope.launch {
-            while (!conn.closed) {
-                try {
-                    conn.start()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    println()
-                }
+        while (!conn.closed) {
+            try {
+                conn.start()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                println()
             }
         }
     }
@@ -167,11 +167,9 @@ abstract class HaClientBase(
         val parsed = conn.parseTree<AuthOk>(tree)
         _version = parsed.haVersion
 
-        coroutineScope.launch {
-            supportedFeatures()
-            subscribeEvent("state_changed")
-            onInitialState(getStates())
-        }
+        supportedFeatures()
+        subscribeEvent("state_changed")
+        onInitialState(getStates())
     }
 
     protected open suspend fun onAuthRequired(tree: JsonNode) {

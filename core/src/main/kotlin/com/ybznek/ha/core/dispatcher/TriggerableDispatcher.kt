@@ -5,17 +5,17 @@ import java.util.*
 
 class TriggerableDispatcher<TOwner, TMessage>(
     private val dispatcher: CoroutineScope = CoroutineScope(Dispatchers.Default),
-    private val listeners: MutableList<(TOwner, TMessage) -> Unit> = Collections.synchronizedList(ArrayList())
+    private val listeners: MutableList<suspend (TOwner, TMessage) -> Unit> = Collections.synchronizedList(ArrayList())
 ) : Dispatcher<TOwner, TMessage>, AutoCloseable {
 
     override val anyListener: Boolean
         get() = listeners.isNotEmpty()
 
-    override operator fun plusAssign(handler: (TOwner, TMessage) -> Unit) {
+    override operator fun plusAssign(handler: suspend (TOwner, TMessage) -> Unit) {
         listeners += handler
     }
 
-    override operator fun minusAssign(handler: (TOwner, TMessage) -> Unit) {
+    override operator fun minusAssign(handler: suspend (TOwner, TMessage) -> Unit) {
         listeners.remove(handler)
     }
 

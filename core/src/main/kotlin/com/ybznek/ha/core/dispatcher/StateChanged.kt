@@ -43,4 +43,7 @@ data class StateChanged<T : TypedEntity>(
         val new = newState.attributes[name]
         return old != new
     }
+
+    @Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
+    inline fun <T : TypedEntity> typed() = this as StateChanged<T>
 }

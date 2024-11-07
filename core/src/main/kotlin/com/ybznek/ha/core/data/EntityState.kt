@@ -11,4 +11,6 @@ data class EntityState<T : TypedEntity>(
     val lastUpdated: Instant,
     val lastReported: Instant,
     val context: Context
-)
+) {
+    fun <T> getAttribute(key: String) = attributes[key] as T
+}
