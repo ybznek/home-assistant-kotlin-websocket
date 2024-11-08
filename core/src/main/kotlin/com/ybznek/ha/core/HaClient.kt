@@ -61,7 +61,7 @@ class HaClient(
         newState: EntityState<TypedEntity>
     ) {
         val changed = StateChanged(
-            entity = entity,
+            entity = EntityId(entity),
             time = time,
             raw = msg,
             oldState = oldState,
@@ -128,4 +128,7 @@ class HaClient(
         super.close()
         triggerableDispatcher.close()
     }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : TypedEntity> getState(lg: EntityId<T>): StateProvider<T> = states[lg.entityId] as StateProvider<T>
 }

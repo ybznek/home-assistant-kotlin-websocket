@@ -5,9 +5,12 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ybznek.ha.core.HassUser
+import com.ybznek.ha.core.data.Context
 import com.ybznek.ha.core.data.HassEntity
 
-typealias ResultMessageCallService = ResultMessage<JsonNode>
+data class CallServiceResultMessage(val context: Context)
+
+typealias ResultMessageCallService = ResultMessage<CallServiceResultMessage>
 typealias ResultMessageGetStates = ResultMessage<List<HassEntity>>
 typealias ResultMessageGetConfig = ResultMessage<HassConfig>
 typealias ResultMessageGetServices = ResultMessage<Map<String, Map<String, HassService>>>

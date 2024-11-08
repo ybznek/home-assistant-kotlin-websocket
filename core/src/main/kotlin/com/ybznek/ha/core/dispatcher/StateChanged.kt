@@ -1,14 +1,14 @@
 package com.ybznek.ha.core.dispatcher
 
 import com.ybznek.ha.core.AttributeName
-import com.ybznek.ha.core.EntityIdString
+import com.ybznek.ha.core.EntityId
 import com.ybznek.ha.core.TypedEntity
 import com.ybznek.ha.core.data.EntityState
 import com.ybznek.ha.core.result.Msg
 import kotlinx.datetime.Instant
 
 data class StateChanged<T : TypedEntity>(
-    val entity: EntityIdString,
+    val entity: EntityId<T>,
     val time: Instant,
     val raw: Msg<*>,
     val oldState: EntityState<T>?,

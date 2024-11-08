@@ -141,7 +141,6 @@ abstract class HaClientBase(
             else -> onUnexpectedType(type, tree)
         }
     }
-
     protected open suspend fun onUnexpectedType(type: String, tree: JsonNode) {
         println("Unexpected type $type")
     }
