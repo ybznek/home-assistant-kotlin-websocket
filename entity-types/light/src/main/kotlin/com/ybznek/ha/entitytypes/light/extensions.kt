@@ -29,22 +29,23 @@ suspend fun EntityId<Light>.turnOn(
 ) = haClient.callService(
     domain = "light",
     service = "turn_on",
-    serviceData = buildMap {
-        put("target", HassServiceTarget.entity(this@turnOn))
-        rgbColor?.run {
-            put("rgb_color", listOf(r.toInt(), g.toInt(), b.toInt()))
-        }
-        brightness?.let {
-            put("brightness", it.toInt())
-        }
-    }
+    data = mapOf(
+        "target" to HassServiceTarget.entity(this@turnOn),
+        "service_data" to buildMap {
+            rgbColor?.run {
+                put("rgb_color", listOf(r.toInt(), g.toInt(), b.toInt()))
+            }
+            brightness?.let {
+                put("brightness", it.toInt())
+            }
+        })
 )
 
 suspend fun EntityId<Light>.turnOff(haClient: HaClient) =
     haClient.callService(
         domain = "light",
         service = "turn_off",
-        serviceData = mapOf(
+        data = mapOf(
             "target" to HassServiceTarget.entity(this)
         )
     )

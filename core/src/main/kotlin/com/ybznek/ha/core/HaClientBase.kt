@@ -71,13 +71,13 @@ abstract class HaClientBase(
     suspend fun callService(
         domain: String,
         service: String,
-        serviceData: Map<String, Any?> = emptyMap()
+        data: Map<String, Any?> = emptyMap()
     ): Msg<ResultMessageCallService> {
         val msg = buildMessage(
             type = DefaultMessageType.CALL_SERVICE,
             "domain" to domain,
             "service" to service
-        ) + serviceData
+        ) + data
 
         return sendSuspendAndParse(msg, jacksonTypeRef<ResultMessageCallService>())
     }

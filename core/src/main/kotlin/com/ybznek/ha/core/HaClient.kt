@@ -13,6 +13,8 @@ import com.ybznek.ha.core.result.SubscriptionMessage
 import com.ybznek.ha.core.state.StateHolder
 import com.ybznek.ha.core.state.StateProvider
 import com.ybznek.ha.core.util.KeyOptimizer
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toKotlinInstant
@@ -31,8 +33,8 @@ class HaClient(
     private val optimizeKey = KeyOptimizer()
 
     val states: Map<EntityIdString, StateProvider<TypedEntity>> = map
-
     val changeListener: Dispatcher<HaClient, StateChanged<TypedEntity>> = triggerableDispatcher
+    private val channel = Channel<Unit>(1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     override suspend fun onEvent(tree: JsonNode) {
         val message = conn.parseTree<SubscriptionMessage>(tree)
@@ -115,6 +117,12 @@ class HaClient(
                 triggerChange(entityId, message, now, oldState = null, newState = state)
             }
         }
+        channel.send(Unit)
+    }
+
+    suspend fun waitForStart() {
+        channel.receive()
+        channel.send(Unit)
     }
 
     private fun optimizeAttributes(attributes: Map<String, Any?>): Map<String, Any?> =

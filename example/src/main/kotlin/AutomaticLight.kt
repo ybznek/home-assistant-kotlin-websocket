@@ -6,6 +6,7 @@ import com.ybznek.ha.entitytypes.light.Light
 import com.ybznek.ha.entitytypes.light.RgbColor
 import com.ybznek.ha.entitytypes.light.turnOff
 import com.ybznek.ha.entitytypes.light.turnOn
+import kotlinx.coroutines.runBlocking
 
 class AutomaticLight(val client: HaClient) {
     object Lights {
@@ -49,6 +50,9 @@ class AutomaticLight(val client: HaClient) {
             }.parsed.result?.context?.id
     }
 
+    init {
+        runBlocking { setLight(true) }
+    }
     private suspend fun occupancyChanged(new: Boolean) {
         if (new) {
             setLight(true)
