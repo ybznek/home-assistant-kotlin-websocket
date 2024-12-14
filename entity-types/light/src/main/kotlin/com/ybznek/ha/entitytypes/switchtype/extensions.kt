@@ -26,6 +26,7 @@ enum class IkeaButtonState(val value: String) {
     }
 }
 
-
-val EntityState<IkeaSwitch>.ikeaSwitchState get() = IkeaButtonState.fromString(getAttribute<String>("action"))
-
+val EntityState<IkeaSwitch>.ikeaSwitchState
+    get() = getAttribute<String?>("action")
+        ?.let { IkeaButtonState.fromString(it) }
+        ?: IkeaButtonState.NONE
