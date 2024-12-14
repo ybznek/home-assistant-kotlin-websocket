@@ -5,6 +5,7 @@ import com.ybznek.ha.entitytypes.switchtype.IkeaSwitch
 
 object EntityIds {
     val ikeaSwitch = EntityId<IkeaSwitch>("button.switch_2_identify")
+    val extraIkeaSwitch = EntityId<IkeaSwitch>("button.switch_3_identify")
     val bedSwitch = EntityId<IkeaSwitch>("button.switch_4_identify")
     val doorSwitch = EntityId<IkeaSwitch>("button.switch_1_identify")
     val lidlLamp = EntityId<LidlLight>("light.zarovka_lidl_lampa")
