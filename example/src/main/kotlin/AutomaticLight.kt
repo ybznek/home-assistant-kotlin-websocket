@@ -6,11 +6,13 @@ import com.ybznek.ha.entitytypes.light.Light
 import com.ybznek.ha.entitytypes.light.RgbColor
 import com.ybznek.ha.entitytypes.light.turnOff
 import com.ybznek.ha.entitytypes.light.turnOn
+import com.ybznek.ha.entitytypes.occupancy.OccupancySensor
+import com.ybznek.ha.entitytypes.occupancy.occupancy
 import kotlinx.coroutines.runBlocking
 
 class AutomaticLight(val client: HaClient) {
     object Lights {
-        val groups = EntityId<Light>("light.workroom_lights")
+        val groups = EntityIds.workroomLights
     }
 
     object Sensor {
@@ -34,7 +36,6 @@ class AutomaticLight(val client: HaClient) {
 
             Lights.groups -> {
                 val typedChange = stateChanged.typed<Light>()
-                println("Received:")
                 println(typedChange.newState.context)
             }
         }

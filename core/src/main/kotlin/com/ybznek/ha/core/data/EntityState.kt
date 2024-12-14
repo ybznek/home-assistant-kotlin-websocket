@@ -12,5 +12,6 @@ data class EntityState<T : TypedEntity>(
     val lastReported: Instant,
     val context: Context
 ) {
+    @Suppress("UNCHECKED_CAST")
     fun <T> getAttribute(key: String) = attributes[key] as T
 }

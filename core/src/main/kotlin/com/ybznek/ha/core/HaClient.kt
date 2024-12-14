@@ -138,5 +138,5 @@ class HaClient(
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : TypedEntity> getState(lg: EntityId<T>): StateProvider<T> = states[lg.entityId] as StateProvider<T>
+    fun <T : TypedEntity> getState(id: EntityId<T>): StateProvider<T> = states[id.entityId] as StateProvider<T>
 }

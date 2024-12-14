@@ -5,7 +5,7 @@ import com.ybznek.ha.core.HaClient
 import com.ybznek.ha.core.HassServiceTarget
 import com.ybznek.ha.core.data.EntityState
 
-val EntityState<Light>.isOn get() = (state == "ON")
+val EntityState<out Light>.isOn get() = (state == "ON")
 
 data class RgbColor(
     val r: UByte = 0.toUByte(),
@@ -19,10 +19,23 @@ data class RgbColor(
     ) : this(r = r.toUByte(), g = g.toUByte(), b = b.toUByte())
 
     fun toList(): List<Int> = listOf(r.toInt(), g.toInt(), b.toInt())
-}
-typealias Brightness = UByte
 
-suspend fun EntityId<Light>.turnOn(
+    companion object {
+        val BLACK = RgbColor(0, 0, 0)
+        val WHITE = RgbColor(255, 255, 255)
+        val RED = RgbColor(255, 0, 0)
+        val GREEN = RgbColor(0, 255, 0)
+        val BLUE = RgbColor(0, 0, 255)
+        val PURPLE = RgbColor(255, 0, 255)
+    }
+}
+
+@JvmInline
+value class Brightness(val value: UByte) {
+    constructor(value: Int) : this(value.toUByte())
+}
+
+suspend fun EntityId<out Light>.turnOn(
     haClient: HaClient,
     rgbColor: RgbColor? = null,
     brightness: Brightness? = null
@@ -36,12 +49,12 @@ suspend fun EntityId<Light>.turnOn(
                 put("rgb_color", listOf(r.toInt(), g.toInt(), b.toInt()))
             }
             brightness?.let {
-                put("brightness", it.toInt())
+                put("brightness", it.value.toInt())
             }
         })
 )
 
-suspend fun EntityId<Light>.turnOff(haClient: HaClient) =
+suspend fun EntityId<out Light>.turnOff(haClient: HaClient) =
     haClient.callService(
         domain = "light",
         service = "turn_off",

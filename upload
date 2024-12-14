@@ -1,0 +1,2 @@
+./gradlew jibBuildTar && scp /home/z/projects/kotlin/home-assistant-kotlin-websocket/example/build/jib-image.tar rpi.local:/tmp/jib-image.tar
+ssh rpi.local "sudo docker load -i /tmp/jib-image.tar; rm /tmp/jib-image.tar" 

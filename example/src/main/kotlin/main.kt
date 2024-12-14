@@ -1,58 +1,37 @@
-import com.ybznek.ha.core.EntityId
 import com.ybznek.ha.core.HaClient
-import com.ybznek.ha.core.TypedEntity
-import com.ybznek.ha.core.data.EntityState
-import com.ybznek.ha.core.dispatcher.StateChanged
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import java.io.File
-import java.util.concurrent.ConcurrentHashMap
 
-interface OccupancySensor : TypedEntity
+fun envVar(name: String): String? = System.getenv(name)?.trim()?.ifEmpty { null }
 
-val EntityState<OccupancySensor>.occupancy get() = getAttribute<Boolean>("occupancy")
+fun main(args: Array<String>) {
 
-val service = ConcurrentHashMap<String, String>()
-
-fun main() {
+    val token = envVar("TOKEN").orEmpty().ifEmpty {
+        val tokenFile = args.getOrNull(0) ?: "/tmp/token.txt"
+        File(tokenFile).readText().trim()
+    }
 
     // setup connection
-    val cli = HaClient(
-        host = "ha.local", port = 80, path = "/api/websocket", token = File("/tmp/token.txt").readText().trim()
+    val ha = HaClient(
+        host = envVar("HOST") ?: "ha.local",
+        port = envVar("PORT")?.toInt() ?: 80,
+        path = "/api/websocket",
+        token = token
     )
 
     runBlocking {
         CoroutineScope(Dispatchers.Default).launch {
-            cli.start()
+            ha.start()
         }
 
-        cli.waitForStart()
-        val automaticLight = AutomaticLight(cli)
-        val printerControl = PrinterControl(cli)
+        ha.waitForStart()
+        println("Started")
 
         // watch & print changed attributes
-        cli.changeListener += { haClient, stateChanged ->
-            automaticLight.stateChanged(stateChanged)
-            printerControl.stateChanged(stateChanged)
-        }
+        ha.changeListener += ::onChange
 
-
-        Channel<Unit>(1).receive()
+        blockForever()
     }
 }
 
-interface MeasuringSwitch : TypedEntity {}
-class PrinterControl(private val cli: HaClient) {
-    val id = EntityId<MeasuringSwitch>("switch.power_switch_printer")
-
-    fun stateChanged(stateChanged: StateChanged<TypedEntity>) {
-        if (stateChanged.entity == id) {
-            println(stateChanged.changedAttributes)
-        }
-    }
-
-}
-
+private suspend fun blockForever(): Nothing = CompletableDeferred<Nothing>().await()

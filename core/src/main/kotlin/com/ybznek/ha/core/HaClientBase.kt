@@ -56,7 +56,6 @@ abstract class HaClientBase(
                 conn.start()
             } catch (e: Exception) {
                 e.printStackTrace()
-                println()
             }
         }
     }
