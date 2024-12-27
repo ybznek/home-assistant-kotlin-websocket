@@ -6,6 +6,7 @@ import com.ybznek.ha.entitytypes.light.Light
 import com.ybznek.ha.entitytypes.light.RgbColor
 import com.ybznek.ha.entitytypes.light.turnOff
 import com.ybznek.ha.entitytypes.light.turnOn
+import com.ybznek.ha.entitytypes.occupancy.LidlOccupancySensor
 import com.ybznek.ha.entitytypes.occupancy.OccupancySensor
 import com.ybznek.ha.entitytypes.occupancy.occupancy
 import kotlinx.coroutines.runBlocking
@@ -16,7 +17,7 @@ class AutomaticLight(val client: HaClient) {
     }
 
     object Sensor {
-        val occupancyId = EntityId<OccupancySensor>("sensor.occupancy_sensor_battery")
+        val occupancyId = EntityId<LidlOccupancySensor>("sensor.occupancy_sensor_battery")
     }
 
     val lightState = client.getState(Lights.groups)
@@ -26,9 +27,9 @@ class AutomaticLight(val client: HaClient) {
     suspend fun stateChanged(stateChanged: StateChanged<TypedEntity>) {
         when (stateChanged.entity) {
             Sensor.occupancyId -> {
-                val typedChange = stateChanged.typed<OccupancySensor>()
+                val typedChange = stateChanged.typed<LidlOccupancySensor>()
                 val old = typedChange.oldState?.occupancy
-                val new = typedChange.newState.occupancy
+                val new = typedChange.newState?.occupancy ?: false
                 if (old != new) {
                     occupancyChanged(new)
                 }
@@ -36,7 +37,7 @@ class AutomaticLight(val client: HaClient) {
 
             Lights.groups -> {
                 val typedChange = stateChanged.typed<Light>()
-                println(typedChange.newState.context)
+                println(typedChange.newState?.context)
             }
         }
     }

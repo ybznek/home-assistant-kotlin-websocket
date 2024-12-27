@@ -40,7 +40,7 @@ class HaClient(
         val message = conn.parseTree<SubscriptionMessage>(tree)
         val event = message.event
         val data = event.data
-        val newState = toEntityState(data.newState)
+        val newState = data.newState?.toEntityState()
         val timeFired = event.timeFired.toKotlinInstant()
         val entityId = optimizeKey(data.entityId)
 
@@ -51,7 +51,7 @@ class HaClient(
         )
 
         if (triggerableDispatcher.anyListener) {
-            triggerChange(entityId, RawMsg(tree, message), timeFired, toEntityState(data.oldState), newState)
+            triggerChange(entityId, RawMsg(tree, message), timeFired, data.oldState?.toEntityState(), newState)
         }
     }
 
@@ -60,7 +60,7 @@ class HaClient(
         msg: Msg<*>,
         time: Instant,
         oldState: EntityState<TypedEntity>?,
-        newState: EntityState<TypedEntity>
+        newState: EntityState<TypedEntity>?
     ) {
         val changed = StateChanged(
             entity = EntityId(entity),
@@ -72,20 +72,20 @@ class HaClient(
         triggerableDispatcher.trigger(this, changed)
     }
 
-    private fun toEntityState(state: State) =
+    private fun State.toEntityState() =
         EntityState<TypedEntity>(
-            state = state.state,
-            attributes = optimizeAttributes(state.attributes),
-            lastChanged = state.lastChanged.toKotlinInstant(),
-            lastUpdated = state.lastUpdated.toKotlinInstant(),
-            lastReported = state.lastReported.toKotlinInstant(),
-            context = state.context
+            state = this.state,
+            attributes = optimizeAttributes(this.attributes),
+            lastChanged = this.lastChanged.toKotlinInstant(),
+            lastUpdated = this.lastUpdated.toKotlinInstant(),
+            lastReported = this.lastReported.toKotlinInstant(),
+            context = this.context
         )
 
     private fun putData(
         entityId: EntityIdString,
         timeFired: Instant,
-        state: EntityState<TypedEntity>
+        state: EntityState<TypedEntity>?
     ) {
         when (val holder = map[entityId]) {
             null -> map.computeIfAbsent(entityId) { _ -> StateHolder(timeFired, AtomicReference(state)) }

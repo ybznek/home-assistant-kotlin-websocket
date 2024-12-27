@@ -11,6 +11,7 @@ import com.ybznek.ha.core.result.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -34,26 +35,28 @@ abstract class HaClientBase(
     private val responses = ResponseDispatcher<Int, JsonNode>()
     private var _version: String? = null
     val version: String? get() = _version
-    protected val coroutineScope = CoroutineScope(Dispatchers.IO)
+    protected val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     val MessageToSend.id get() = this["id"] as Int
     val MessageToSend.type get() = this["type"] as String
 
     @PublishedApi
-    internal val conn = HaConnection(host, port, path) { type, tree ->
-        coroutineScope.launch {
-            try {
-                processMessage(type, tree)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+    internal val conn = HaConnection(host, port, path)
 
     suspend fun start() {
         while (!conn.closed) {
             try {
-                conn.start()
+                conn
+                    .start()
+                    .collect { (type, tree) ->
+                        coroutineScope.launch {
+                            try {
+                                processMessage(type, tree)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -140,6 +143,7 @@ abstract class HaClientBase(
             else -> onUnexpectedType(type, tree)
         }
     }
+
     protected open suspend fun onUnexpectedType(type: String, tree: JsonNode) {
         println("Unexpected type $type")
     }
@@ -151,7 +155,7 @@ abstract class HaClientBase(
     }
 
     protected open suspend fun onAuthInvalid(tree: JsonNode) {
-        conn.parseTree<AuthInvalidMessage>(tree)
+        error(conn.parseTree<AuthInvalidMessage>(tree))
     }
 
     protected open suspend fun onPong(tree: JsonNode) {
@@ -159,7 +163,6 @@ abstract class HaClientBase(
     }
 
     protected open suspend fun onAuthOk(tree: JsonNode) {
-
         data class AuthOk(val type: String, val haVersion: String)
 
         val parsed = conn.parseTree<AuthOk>(tree)

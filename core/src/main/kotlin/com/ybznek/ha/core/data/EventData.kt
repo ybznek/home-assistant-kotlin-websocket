@@ -4,6 +4,6 @@ import com.ybznek.ha.core.EntityIdString
 
 data class EventData(
     val entityId: EntityIdString,
-    val oldState: State,
-    val newState: State,
+    val oldState: State?,
+    val newState: State?,
 )

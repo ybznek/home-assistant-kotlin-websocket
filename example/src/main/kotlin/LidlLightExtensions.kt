@@ -8,7 +8,7 @@ suspend fun EntityId<LidlLight>.turnOnLidl(cli: HaClient, color: RgbColor) {
 }
 
 suspend fun EntityId<LidlLight>.turnOffLidl(cli: HaClient) {
-    turnOn(cli, RgbColor(0, 0, 0), Brightness(0))
-    turnOff(cli)
+    turnOn(cli, RgbColor(0, 0, 0), brightness = Brightness(0), transition = 0)
+     turnOff(cli)
 }
 

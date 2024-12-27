@@ -32,13 +32,20 @@ data class RgbColor(
 
 @JvmInline
 value class Brightness(val value: UByte) {
+    
     constructor(value: Int) : this(value.toUByte())
+
+    companion object {
+        val MAX = Brightness(255)
+    }
 }
 
 suspend fun EntityId<out Light>.turnOn(
     haClient: HaClient,
     rgbColor: RgbColor? = null,
-    brightness: Brightness? = null
+    transition: Int? = null,
+    colorTemp: Int? = null,
+    brightness: Brightness? = Brightness.MAX
 ) = haClient.callService(
     domain = "light",
     service = "turn_on",
@@ -50,6 +57,12 @@ suspend fun EntityId<out Light>.turnOn(
             }
             brightness?.let {
                 put("brightness", it.value.toInt())
+            }
+            colorTemp?.let {
+                put("color_temp", it)
+            }
+            transition?.let {
+                put("transition", it)
             }
         })
 )

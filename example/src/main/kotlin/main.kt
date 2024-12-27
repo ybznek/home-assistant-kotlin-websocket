@@ -1,4 +1,5 @@
 import com.ybznek.ha.core.HaClient
+import com.ybznek.ha.entitytypes.light.turnOff
 import kotlinx.coroutines.*
 import java.io.File
 
@@ -27,6 +28,8 @@ fun main(args: Array<String>) {
         ha.waitForStart()
         println("Started")
 
+        EntityIds.hallLight.turnOff(ha)
+        EntityIds.kitchenLight.turnOff(ha)
         // watch & print changed attributes
         ha.changeListener += ::onChange
 

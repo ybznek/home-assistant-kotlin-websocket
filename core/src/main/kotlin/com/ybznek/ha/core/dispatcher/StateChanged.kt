@@ -12,7 +12,7 @@ data class StateChanged<T : TypedEntity>(
     val time: Instant,
     val raw: Msg<*>,
     val oldState: EntityState<T>?,
-    val newState: EntityState<T>
+    val newState: EntityState<T>?
 ) {
     val changedAttributes: Map<AttributeName, ValueChange<*>> by lazy {
         calcAttributeChange()
@@ -20,7 +20,11 @@ data class StateChanged<T : TypedEntity>(
 
     private fun calcAttributeChange(): Map<AttributeName, ValueChange<*>> {
         val oldAttributes = oldState?.attributes
-        val newAttributes = newState.attributes
+        val newAttributes = newState?.attributes
+
+        if (newAttributes==null) {
+            return emptyMap()
+        }
 
         if (oldAttributes == null) {
             return newAttributes.mapValuesTo(HashMap(newAttributes.size)) { (_, value) ->
@@ -40,10 +44,13 @@ data class StateChanged<T : TypedEntity>(
 
     fun isChanged(name: AttributeName): Boolean {
         val old = oldState?.attributes?.get(name)
-        val new = newState.attributes[name]
+        val new = newState?.attributes[name]
         return old != new
     }
 
     @Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
     inline fun <T : TypedEntity> typed() = this as StateChanged<T>
+
+    @Suppress("UNCHECKED_CAST", "NOTHING_TO_INLINE")
+    inline fun <T : TypedEntity> typed(@Suppress("unused") id: EntityId<T>) = typed<T>()
 }

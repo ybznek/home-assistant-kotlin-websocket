@@ -2,4 +2,8 @@ package com.ybznek.ha.entitytypes.occupancy
 
 import com.ybznek.ha.core.data.EntityState
 
-val EntityState<OccupancySensor>.occupancy get() = getAttribute<Boolean>("occupancy")
+@get:JvmName("occupancyIkea")
+val EntityState<IkeaOccupancySensor>.occupancy get() = getAttribute<Boolean>("occupancy")
+
+@get:JvmName("occupancyLidl")
+val EntityState<LidlOccupancySensor>.occupancy get() = state == "on"

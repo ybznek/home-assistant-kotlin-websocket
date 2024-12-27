@@ -26,7 +26,15 @@ enum class IkeaButtonState(val value: String) {
     }
 }
 
-val EntityState<IkeaSwitch>.ikeaSwitchState
-    get() = getAttribute<String?>("action")
-        ?.let { IkeaButtonState.fromString(it) }
-        ?: IkeaButtonState.NONE
+@get:JvmName("get-ikeaSwitchStateNullable")
+val EntityState<IkeaSwitch>?.ikeaSwitchState: IkeaButtonState
+    get() = when (this) {
+        null -> IkeaButtonState.NONE
+        else -> ikeaSwitchState
+    }
+
+val EntityState<IkeaSwitch>.ikeaSwitchState: IkeaButtonState
+    get() = when (val attribute = getAttribute<String?>("action")) {
+        null -> IkeaButtonState.NONE
+        else -> IkeaButtonState.fromString(attribute)
+    }
