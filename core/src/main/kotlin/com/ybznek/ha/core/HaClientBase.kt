@@ -80,7 +80,7 @@ abstract class HaClientBase(
             "domain" to domain,
             "service" to service
         ) + data
-
+// return_response todo
         return sendSuspendAndParse(msg, jacksonTypeRef<ResultMessageCallService>())
     }
 
@@ -145,7 +145,7 @@ abstract class HaClientBase(
     }
 
     protected open suspend fun onUnexpectedType(type: String, tree: JsonNode) {
-        println("Unexpected type $type")
+        error("Unexpected type $type")
     }
 
     protected open suspend fun onEvent(tree: JsonNode) {}

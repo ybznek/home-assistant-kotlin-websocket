@@ -42,7 +42,7 @@ suspend fun onChange(haClient: HaClient, stateChanged: StateChanged<TypedEntity>
 
 private suspend fun HaClient.processHall(typed: StateChanged<IkeaOccupancySensor>) {
     val old = typed.oldState?.occupancy
-    val new = typed.newState?.occupancy ?: false
+    val new = typed.newState?.occupancy == true
     if (new != old) {
         if (new) {
             hallLight.turnOn(this, colorTemp = (454 + 250) / 2, transition = 0)
@@ -55,7 +55,7 @@ private suspend fun HaClient.processHall(typed: StateChanged<IkeaOccupancySensor
 
 private suspend fun HaClient.processKitchen(typed: StateChanged<LidlOccupancySensor>) {
     val old = typed.oldState?.occupancy
-    val new = typed.newState?.occupancy ?: false
+    val new = typed.newState?.occupancy == true
     if (new != old) {
         if (new) {
             kitchenLight.turnOn(this, colorTemp = (454 + 250) / 2, transition = 0)
